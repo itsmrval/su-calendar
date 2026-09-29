@@ -1,0 +1,25 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency: deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4'
+          secrets: |
+            CFA_EMAIL
+            CFA_PASSWORD
+        env:
+          CFA_EMAIL: ${{ secrets.CFA_EMAIL }}
+          CFA_PASSWORD: ${{ secrets.CFA_PASSWORD }}

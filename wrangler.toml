@@ -1,0 +1,8 @@
+name = "su-calendar"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = false
+
+[vars]
+WINDOW_DAYS = 60
+PAST_DAYS = 7
