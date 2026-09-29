@@ -1,4 +1,5 @@
 import { fold, parseDate } from "../lib/ics.js";
+import { JUSSIEU, placeLines } from "../lib/places.js";
 
 const URL = "https://cal.ufr-info-p6.jussieu.fr/caldav.php/RES/M1_RES-ITESCIA/?export";
 const AUTH = "student.master:guest";
@@ -33,21 +34,26 @@ function parse(block) {
 
 function render({ lines }) {
   let cancelled = false;
-  const out = lines.flatMap((line) => {
+  let room = "";
+  const body = lines.slice(1, -1).flatMap((line) => {
     const [key, value] = [line.replace(/[;:].*/, ""), line.replace(/^[^:]*:/, "")];
     if (key === "SUMMARY") {
       cancelled = /ANNUL/i.test(value);
       return `SUMMARY:${title(value)}`;
     }
-    if (key === "LOCATION") {
-      const room = location(value);
-      return room ? `LOCATION:${room}` : [];
-    }
-    if (key === "STATUS") return [];
+    if (key === "LOCATION") room = location(value);
+    if (["LOCATION", "STATUS", "GEO", "X-APPLE-STRUCTURED-LOCATION"].includes(key)) return [];
     return line;
   });
-  out.splice(-1, 0, `STATUS:${cancelled ? "CANCELLED" : "CONFIRMED"}`);
-  return out.map(fold).join("\r\n");
+  return [
+    "BEGIN:VEVENT",
+    ...body,
+    ...placeLines(room || "Jussieu", JUSSIEU),
+    `STATUS:${cancelled ? "CANCELLED" : "CONFIRMED"}`,
+    "END:VEVENT",
+  ]
+    .map(fold)
+    .join("\r\n");
 }
 
 function title(summary) {
@@ -61,10 +67,10 @@ function title(summary) {
 
 function location(value) {
   return value
-    .replace(/\\n/g, " ")
+    .replace(/\\([,;n])/g, (_, c) => (c === "n" ? " " : c))
     .replace(/\(?\s*Réservation[^)]*\)?/gi, "")
     .replace(/^\s*Salle[^:]*:\s*/i, "")
-    .replace(/\s+et\s+/g, "\\, ")
+    .replace(/\s+et\s+/g, ", ")
     .replace(/\s+/g, " ")
     .trim();
 }

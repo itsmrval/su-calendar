@@ -1,7 +1,7 @@
 export const toUtc = (date) => date.toISOString().replace(/[-:]|\.\d+/g, "");
 
 export const escape = (text) =>
-  String(text).replace(/[\;,]/g, "\\$&").replace(/\n/g, "\\n");
+  String(text).replace(/[\\;,]/g, "\\$&").replace(/\n/g, "\\n");
 
 export function parseDate(value) {
   const m = value?.match(/^(\d{4})(\d\d)(\d\d)(?:T(\d\d)(\d\d)(\d\d))?/);
